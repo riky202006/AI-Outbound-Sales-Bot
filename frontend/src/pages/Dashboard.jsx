@@ -2,20 +2,35 @@ import { useEffect, useState } from "react";
 
 import Navbar from "../components/dashboard/Navbar";
 import DashboardCards from "../components/dashboard/DashboardCards";
+
 import LeadForm from "../components/lead/LeadForm";
 import LeadTable from "../components/lead/LeadTable";
+
+import AIStudio from "../components/ai/AIStudio";
 import EmailPreview from "../components/email/EmailPreview";
 
 import { getLeads } from "../services/api";
 
 function Dashboard() {
+  // ==========================
+  // State
+  // ==========================
+
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch leads from backend
+
+
+  // ==========================
+  // Fetch Leads
+  // ==========================
+
   const fetchLeads = async () => {
     try {
+      setLoading(true);
+
       const res = await getLeads();
+
       setLeads(res.data);
     } catch (err) {
       console.error("Failed to fetch leads:", err);
@@ -44,25 +59,35 @@ function Dashboard() {
 
       <Navbar />
 
-      <main className="max-w-[1600px] mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-[1700px] mx-auto px-6 py-8 space-y-8">
+
+        {/* Dashboard Cards */}
 
         <DashboardCards leads={leads} />
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Top Section */}
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+          {/* Lead Form */}
 
           <LeadForm
             refreshLeads={fetchLeads}
           />
 
-          <EmailPreview />
+          <AIStudio />
+
+<EmailPreview />
 
         </div>
 
-        <LeadTable
-          leads={leads}
-          loading={loading}
-        />
+        {/* Lead Table */}
 
+<LeadTable
+  leads={leads}
+  loading={loading}
+  refreshLeads={fetchLeads}
+/>
       </main>
 
     </div>

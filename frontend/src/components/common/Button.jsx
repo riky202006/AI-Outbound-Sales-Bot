@@ -17,13 +17,15 @@ function Button({
   variant = "primary",
   type = "button",
   className = "",
+  disabled = false,
   ...props
 }) {
   return (
     <motion.button
-      whileHover={{ scale: 1.03, y: -2 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={!disabled ? { scale: 1.03, y: -2 } : {}}
+      whileTap={!disabled ? { scale: 0.97 } : {}}
       type={type}
+      disabled={disabled}
       {...props}
       className={`
         group
@@ -53,30 +55,38 @@ function Button({
 
         ${variants[variant]}
 
+        ${
+          disabled
+            ? "opacity-60 cursor-not-allowed"
+            : "cursor-pointer"
+        }
+
         ${className}
       `}
     >
       {/* Liquid Shine */}
-      <span
-        className="
-          absolute
-          inset-y-0
-          -left-1/2
-          w-1/2
+      {!disabled && (
+        <span
+          className="
+            absolute
+            inset-y-0
+            -left-1/2
+            w-1/2
 
-          bg-gradient-to-r
-          from-transparent
-          via-white/30
-          to-transparent
+            bg-gradient-to-r
+            from-transparent
+            via-white/30
+            to-transparent
 
-          skew-x-[-25deg]
+            skew-x-[-25deg]
 
-          group-hover:left-[120%]
+            group-hover:left-[120%]
 
-          transition-all
-          duration-1000
-        "
-      />
+            transition-all
+            duration-1000
+          "
+        />
+      )}
 
       <span className="relative flex items-center gap-2">
         {icon}

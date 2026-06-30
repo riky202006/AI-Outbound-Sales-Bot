@@ -56,42 +56,184 @@ app.get('/api/leads', async (req, res) => {
     res.status(500).json({ error: "Failed to fetch leads", details: err.message });
   }
 });
-
-/// GENERATE FREE PERSONALIZED EMAIL USING THE MODERN GEMINI SDK
-app.post('/api/ai/generate', async (req, res) => {
-  const { leadId } = req.body;
-  if (!leadId) return res.status(400).json({ error: "leadId is required" });
+// DELETE LEAD
+app.delete('/api/leads/:id', async (req, res) => {
+  const { id } = req.params;
 
   try {
-    const leadResult = await pool.query('SELECT * FROM leads WHERE id = $1', [leadId]);
-    if (leadResult.rows.length === 0) return res.status(404).json({ error: "Lead not found" });
+    const result = await pool.query(
+      "DELETE FROM leads WHERE id = $1 RETURNING *",
+      [id]
+    );
 
-    const lead = leadResult.rows[0];
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Lead not found"
+      });
+    }
 
-    const prompt = `You are an elite outbound sales assistant. Write a short, compelling cold outreach email to a prospective lead.
-     Use their details below to personalize it natively. Keep it under 150 words, professional, and include a clear, low-friction call to action.
-     Do not include placeholder text like "[Your Name]". Sign off simply as "The Sales Team".
-    
-    Lead Details:
-    - Name: ${lead.first_name} ${lead.last_name}
-    - Company: ${lead.company}
-    - Custom Context: ${lead.additional_context || "None provided"}`;
-
-    // Fix: Using the correct new client route structure
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
-    
     res.json({
-      leadId: lead.id,
-      recipient: lead.email,
-      emailDraft: response.text  // Grabs the generated string directly
+      message: "Lead deleted successfully",
+      deletedLead: result.rows[0]
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Gemini AI generation failed", details: err.message });
+
+    res.status(500).json({
+      error: "Failed to delete lead",
+      details: err.message
+    });
+  }
+});
+
+// UPDATE LEAD STATUS
+app.patch("/api/leads/:id/status", async (req, res) => {
+
+  const { id } = req.params;
+
+  const { status } = req.body;
+
+  try {
+
+    const result = await pool.query(
+      `
+      UPDATE leads
+      SET status = $1
+      WHERE id = $2
+      RETURNING *;
+      `,
+      [status, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Lead not found",
+      });
+    }
+
+    res.json({
+      message: "Status updated successfully",
+      lead: result.rows[0],
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      error: "Failed to update status",
+      details: err.message,
+    });
+
+  }
+
+});
+
+// GENERATE AI EMAIL
+app.post('/api/ai/generate', async (req, res) => {
+const {
+  leadId,
+  prompt,
+  tone,
+  length,
+  cta,
+} = req.body;
+
+  if (!leadId) {
+    return res.status(400).json({
+      error: "leadId is required"
+    });
+  }
+
+  try {
+    // Fetch lead from database
+    const leadResult = await pool.query(
+      "SELECT * FROM leads WHERE id = $1",
+      [leadId]
+    );
+
+    if (leadResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Lead not found"
+      });
+    }
+
+    const lead = leadResult.rows[0];
+
+const promptText = `
+You are an elite B2B outbound sales copywriter.
+
+Generate a highly personalized cold outreach email.
+
+Return ONLY valid JSON.
+
+The JSON format MUST be:
+
+{
+  "subject":"...",
+  "body":"..."
+}
+
+Rules:
+
+- Tone: ${tone}
+- Length: ${length}
+- Call To Action: ${cta}
+
+Additional AI Instructions:
+
+${prompt || "None"}
+
+Lead Information:
+
+Name: ${lead.first_name} ${lead.last_name}
+
+Company: ${lead.company}
+
+Email: ${lead.email}
+
+Context:
+
+${lead.additional_context || "None"}
+
+Requirements:
+
+- Professional
+- Personalized
+- No markdown
+- No code block
+- Mention the company naturally
+- Mention the context if available
+- End with:
+
+"The Sales Team"
+`;
+    // Gemini API
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: promptText,
+    });
+
+    const text = response.text.trim();
+
+    // Parse JSON returned by Gemini
+    const email = JSON.parse(text);
+
+    res.json({
+      leadId: lead.id,
+      recipient: lead.email,
+      subject: email.subject,
+      body: email.body,
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "Gemini AI generation failed",
+      details: err.message,
+    });
   }
 });
 

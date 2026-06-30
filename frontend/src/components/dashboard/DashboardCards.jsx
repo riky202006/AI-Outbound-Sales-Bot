@@ -2,6 +2,7 @@ import {
   Users,
   UserPlus,
   PhoneCall,
+  Clock3,
   BadgeCheck,
 } from "lucide-react";
 
@@ -18,12 +19,16 @@ function DashboardCards({ leads }) {
     (lead) => lead.status === "Contacted"
   ).length;
 
+  const followUpLeads = leads.filter(
+    (lead) => lead.status === "Follow-up"
+  ).length;
+
   const bookedLeads = leads.filter(
     (lead) => lead.status === "Booked"
   ).length;
 
   return (
-    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-5">
 
       <StatCard
         title="Total Leads"
@@ -44,6 +49,13 @@ function DashboardCards({ leads }) {
         value={contactedLeads}
         color="text-orange-400"
         icon={<PhoneCall size={40} />}
+      />
+
+      <StatCard
+        title="Follow-up"
+        value={followUpLeads}
+        color="text-yellow-400"
+        icon={<Clock3 size={40} />}
       />
 
       <StatCard

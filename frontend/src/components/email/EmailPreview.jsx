@@ -1,122 +1,180 @@
+import { useState } from "react";
+import { Copy, RefreshCw, Mail } from "lucide-react";
+import toast from "react-hot-toast";
+
 import Card from "../common/Card";
 import Button from "../common/Button";
-import {
-  Bot,
-  Copy,
-  Send,
-  Sparkles,
-  Mail,
-} from "lucide-react";
+import { useAI } from "../../context/AIContext";
 
 function EmailPreview() {
+  const {
+    generatedEmail,
+    generateAIEmail,
+    loadingAI,
+  } = useAI();
+
+  const [copied, setCopied] = useState(false);
+
+  const copyEmail = async () => {
+    if (!generatedEmail.body) {
+      toast.error("No email generated yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(
+        `Subject: ${generatedEmail.subject}\n\n${generatedEmail.body}`
+      );
+
+      setCopied(true);
+
+      toast.success("Email copied!");
+
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+
+    } catch (err) {
+      toast.error("Failed to copy.");
+    }
+  };
+
   return (
-    <Card className="p-8 flex flex-col h-full">
+    <Card className="p-8 h-full">
 
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-
-        <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center">
-
-          <Bot className="text-cyan-400" size={24} />
-
-        </div>
+      <div className="flex items-center justify-between mb-8">
 
         <div>
 
           <h2 className="text-3xl font-bold">
-            AI Email Preview
+            ✨ AI Email Preview
           </h2>
 
           <p className="text-slate-400">
-            Gemini AI Generated Outreach
+            Review your generated outreach email.
           </p>
 
         </div>
 
       </div>
 
-      {/* Recipient */}
+      {!generatedEmail.body ? (
 
-      <div className="mb-5">
+        <div className="h-[420px] flex flex-col justify-center items-center text-center">
 
-        <p className="text-sm text-slate-400 mb-2">
-          To
-        </p>
+          <Mail
+            size={60}
+            className="text-cyan-400 mb-6"
+          />
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3">
-          john@company.com
-        </div>
+          <h3 className="text-xl font-semibold">
 
-      </div>
+            No Email Generated
 
-      {/* Subject */}
+          </h3>
 
-      <div className="mb-5">
+          <p className="text-slate-400 mt-2">
 
-        <p className="text-sm text-slate-400 mb-2">
-          Subject
-        </p>
+            Select a lead and click
+            <br />
+            <strong>Generate AI Email</strong>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-3">
-
-          Reducing Manual Work at Acme Corp
+          </p>
 
         </div>
 
-      </div>
+      ) : (
 
-      {/* Email Body */}
+        <>
 
-      <div className="flex-1 mb-6">
+          <div className="space-y-5">
 
-        <p className="text-sm text-slate-400 mb-2">
-          Email
-        </p>
+            <div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 h-[320px] overflow-y-auto whitespace-pre-wrap text-slate-300 leading-7">
+              <p className="text-slate-400 mb-2">
 
-Hi John,
+                Recipient
 
-I noticed Acme Corp has been expanding rapidly, and I thought I'd reach out.
+              </p>
 
-Our AI-powered sales automation platform helps teams reduce repetitive outreach work while increasing response rates through personalized emails generated with AI.
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
 
-Would you be open to a quick 10-minute conversation next week?
+                {generatedEmail.recipient}
 
-Best regards,
+              </div>
 
-The Sales Team
+            </div>
 
-        </div>
+            <div>
 
-      </div>
+              <p className="text-slate-400 mb-2">
 
-      {/* Buttons */}
+                Subject
 
-      <div className="grid grid-cols-3 gap-4">
+              </p>
 
-        <Button
-          variant="secondary"
-          icon={<Copy size={18} />}
-        >
-          Copy
-        </Button>
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
 
-        <Button
-          variant="secondary"
-          icon={<Send size={18} />}
-        >
-          Send
-        </Button>
+                {generatedEmail.subject}
 
-        <Button
-          variant="primary"
-          icon={<Sparkles size={18} />}
-        >
-          Generate AI
-        </Button>
+              </div>
 
-      </div>
+            </div>
+
+            <div>
+
+              <p className="text-slate-400 mb-2">
+
+                Email Body
+
+              </p>
+
+              <textarea
+                value={generatedEmail.body}
+                readOnly
+                className="
+                  w-full
+                  h-64
+                  rounded-2xl
+                  bg-white/5
+                  border
+                  border-white/10
+                  p-4
+                  resize-none
+                  text-white
+                  outline-none
+                "
+              />
+
+            </div>
+
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mt-6">
+
+            <Button
+              variant="secondary"
+              icon={<Copy size={18} />}
+              onClick={copyEmail}
+            >
+              {copied ? "Copied!" : "Copy Email"}
+            </Button>
+
+            <Button
+              icon={<RefreshCw size={18} />}
+              onClick={generateAIEmail}
+              disabled={loadingAI}
+            >
+              {loadingAI
+                ? "Generating..."
+                : "Regenerate"}
+            </Button>
+
+          </div>
+
+        </>
+
+      )}
 
     </Card>
   );
