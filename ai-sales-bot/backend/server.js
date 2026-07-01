@@ -1,20 +1,17 @@
-const express = require('express');
-const cors = require('cors');
-const { Pool } = require('pg');
-const { GoogleGenAI } = require('@google/genai');
 require('dotenv').config();
 
+const express = require('express');
+const cors = require('cors');
+const pool = require("./config/db");
+const { GoogleGenAI } = require('@google/genai');
+const leadRoutes = require("./routes/leadRoutes");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Database Connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+app.use("/api/leads", leadRoutes);
 
 // 2. Initialize Gemini Client with your Free Key
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -30,105 +27,6 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
-// ADD A NEW LEAD
-app.post('/api/leads', async (req, res) => {
-  const { first_name, last_name, company, email, additional_context } = req.body;
-  if (!email) return res.status(400).json({ error: "Email is required" });
-
-  try {
-    const queryText = `
-      INSERT INTO leads (first_name, last_name, company, email, additional_context, status)
-      VALUES ($1, $2, $3, $4, $5, 'New') RETURNING *;
-    `;
-    const result = await pool.query(queryText, [first_name, last_name, company, email, additional_context]);
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to add lead", details: err.message });
-  }
-});
-
-// GET ALL LEADS
-app.get('/api/leads', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM leads ORDER BY created_at DESC;');
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch leads", details: err.message });
-  }
-});
-// DELETE LEAD
-app.delete('/api/leads/:id', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const result = await pool.query(
-      "DELETE FROM leads WHERE id = $1 RETURNING *",
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        error: "Lead not found"
-      });
-    }
-
-    res.json({
-      message: "Lead deleted successfully",
-      deletedLead: result.rows[0]
-    });
-
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      error: "Failed to delete lead",
-      details: err.message
-    });
-  }
-});
-
-// UPDATE LEAD STATUS
-app.patch("/api/leads/:id/status", async (req, res) => {
-
-  const { id } = req.params;
-
-  const { status } = req.body;
-
-  try {
-
-    const result = await pool.query(
-      `
-      UPDATE leads
-      SET status = $1
-      WHERE id = $2
-      RETURNING *;
-      `,
-      [status, id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        error: "Lead not found",
-      });
-    }
-
-    res.json({
-      message: "Status updated successfully",
-      lead: result.rows[0],
-    });
-
-  } catch (err) {
-
-    console.error(err);
-
-    res.status(500).json({
-      error: "Failed to update status",
-      details: err.message,
-    });
-
-  }
-
-});
 
 // GENERATE AI EMAIL
 app.post('/api/ai/generate', async (req, res) => {
