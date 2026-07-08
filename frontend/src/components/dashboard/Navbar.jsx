@@ -16,11 +16,11 @@ function Navbar() {
 
         <div>
           <h1 className="text-4xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 bg-clip-text text-transparent">
-            AI Outbound Sales Bot
+            LeadPilot AI
           </h1>
 
           <p className="text-sm text-slate-400">
-            Hyper-Personalized Sales Automation
+            AI Sales CRM
           </p>
         </div>
 

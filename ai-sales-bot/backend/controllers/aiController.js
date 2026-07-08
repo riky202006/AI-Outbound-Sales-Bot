@@ -88,15 +88,42 @@ Requirements:
 
     const text = response.text.trim();
 
-    const email = JSON.parse(text);
+const email = JSON.parse(text);
 
-    res.json({
-      leadId: lead.id,
-      recipient: lead.email,
-      subject: email.subject,
-      body: email.body,
-    });
+// ========================
+// Save Generated Email
+// ========================
 
+await pool.query(
+  `
+  INSERT INTO emails
+  (
+    lead_id,
+    recipient,
+    subject,
+    body,
+    status,
+    source
+  )
+  VALUES
+  (
+    $1,$2,$3,$4,'Draft','AI'
+  )
+  `,
+  [
+    lead.id,
+    lead.email,
+    email.subject,
+    email.body,
+  ]
+);
+
+res.json({
+  leadId: lead.id,
+  recipient: lead.email,
+  subject: email.subject,
+  body: email.body,
+});
   } catch (err) {
     console.error(err);
 

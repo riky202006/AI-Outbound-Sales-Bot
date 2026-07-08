@@ -7,14 +7,27 @@ const { GoogleGenAI } = require('@google/genai');
 const leadRoutes = require("./routes/leadRoutes");
 const app = express();
 const PORT = process.env.PORT || 5000;
+const emailRoutes = require("./routes/emailRoutes");
+const session = require("express-session");
+const authRoutes = require("./routes/authRoutes");
+const gmailRoutes = require("./routes/gmailRoutes");
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use("/api/gmail", gmailRoutes);
 
-
+app.use("/api/emails", emailRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/auth", authRoutes);
 // 2. Initialize Gemini Client with your Free Key
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -32,6 +45,7 @@ app.get('/api/test-db', async (req, res) => {
 
 
 
-app.get('/', (req, res) => res.send('AI Outbound Sales Bot Backend running on Free Tier!'));
-
+app.get("/", (req, res) =>
+  res.send("LeadPilot Backend is running!")
+);
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
