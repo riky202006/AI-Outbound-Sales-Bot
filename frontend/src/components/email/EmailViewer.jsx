@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Trash2,Pencil,Save,X,Send,} from "lucide-react";
+import {Trash2,Pencil,Save,X,Send,} from "lucide-react";
 import toast from "react-hot-toast";
 
 import Card from "../common/Card";
