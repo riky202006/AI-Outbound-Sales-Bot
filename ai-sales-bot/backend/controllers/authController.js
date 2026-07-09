@@ -6,28 +6,6 @@ const oauth2Client = require("../config/google");
 const { google } = require("googleapis");
 const pool = require("../config/db");
 
-// ==========================
-// GOOGLE LOGIN
-// ==========================
-
-exports.googleLogin = (req, res) => {
-
-  const url = oauth2Client.generateAuthUrl({
-    access_type: "offline",
-    prompt: "consent",
-    scope: [
-      "https://www.googleapis.com/auth/gmail.send",
-      "https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/userinfo.profile",
-    ],
-  });
-
-  
-  res.redirect(url);
-
-};
-
-
 
 // ==========================
 // GOOGLE LOGIN
@@ -98,7 +76,7 @@ exports.googleCallback = async (req, res) => {
       ]
     );
 
-    res.redirect("http://localhost:5173/settings");
+    res.redirect("https://leadpilot-ai-iota.vercel.app/settings");
 
   } catch (err) {
 
