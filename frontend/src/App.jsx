@@ -6,7 +6,7 @@ import {
 
 import Dashboard from "./pages/Dashboard";
 import EmailCenterPage from "./pages/EmailCenter";
-import Settings from "./pages/Settings";
+import Settings from "./pages/settings";
 
 // Temporary until we build Analytics
 function Analytics() {
